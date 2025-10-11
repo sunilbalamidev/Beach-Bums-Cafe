@@ -1,30 +1,60 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 const Header = () => {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const barRef = useRef(null); // <-- ref to the top bar (not the drawer)
 
+  // Keep the "sticky" shadow and re-measure on scroll
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 2);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Measure the top bar height and push to CSS var --site-header-h
+  const setHeaderVar = () => {
+    const h = barRef.current?.offsetHeight || 64;
+    document.documentElement.style.setProperty("--site-header-h", `${h}px`);
+  };
+
+  useEffect(() => {
+    setHeaderVar(); // initial
+    const ro = new ResizeObserver(setHeaderVar);
+    if (barRef.current) ro.observe(barRef.current);
+    // Also re-measure on viewport resize (fonts can reflow)
+    window.addEventListener("resize", setHeaderVar);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", setHeaderVar);
+    };
+  }, []);
+
+  // Re-measure whenever the mobile drawer toggles (even though it’s below the bar,
+  // this ensures we’re always correct if styling changes)
+  useEffect(() => {
+    setHeaderVar();
+  }, [open]);
+
   const navLink =
     "text-sm font-medium transition-colors hover:text-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal/40 focus-visible:rounded-[0.25rem]";
-
   const mobileLink =
     "block px-2 py-1 rounded-md transition-colors hover:text-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal/40";
 
   return (
     <header
-      className={`sticky top-0 z-50 bg-white/80 backdrop-blur transition-shadow ${
+      id="site-header"
+      className={`sticky top-0 z-[60] bg-white/80 backdrop-blur transition-shadow ${
         scrolled ? "shadow-sm" : ""
       }`}
     >
-      {/* container */}
-      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      {/* top bar (measured) */}
+      <div
+        ref={barRef}
+        className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between"
+      >
         {/* left: site identity */}
         <a
           href="/"
@@ -86,17 +116,17 @@ const Header = () => {
 
           {/* desktop CTA */}
           <div className="hidden md:block">
-            <button
-              type="button"
+            <a
+              href="#menu"
               className="px-4 py-2 text-sm font-medium rounded-full border border-brand-teal text-brand-teal hover:bg-brand-teal hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal/40"
             >
               View Menu
-            </button>
+            </a>
           </div>
         </div>
       </div>
 
-      {/* mobile menu drawer */}
+      {/* mobile menu drawer (does not affect measured top bar) */}
       <nav
         id="mobile-nav"
         aria-label="Mobile Navigation"
@@ -106,17 +136,29 @@ const Header = () => {
       >
         <ul role="list" className="flex flex-col gap-3 p-4 text-sm font-medium">
           <li>
-            <a href="#menu" className={mobileLink}>
+            <a
+              href="#menu"
+              className={mobileLink}
+              onClick={() => setOpen(false)}
+            >
               Menu
             </a>
           </li>
           <li>
-            <a href="#visit" className={mobileLink}>
+            <a
+              href="#visit"
+              className={mobileLink}
+              onClick={() => setOpen(false)}
+            >
               Visit Us
             </a>
           </li>
           <li>
-            <a href="#story" className={mobileLink}>
+            <a
+              href="#story"
+              className={mobileLink}
+              onClick={() => setOpen(false)}
+            >
               Our Story
             </a>
           </li>
