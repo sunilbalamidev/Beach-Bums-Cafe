@@ -1,4 +1,4 @@
-import React from "react";
+import Image from "next/image";
 
 const Story = () => {
   return (
@@ -17,10 +17,14 @@ const Story = () => {
 
         {/* right: image */}
         <div>
-          <img
+          <Image
             src="/coffee.webp"
             alt="Our Story"
-            className="h-45 w-full object-cover rounded-xl"
+            width={1000}
+            height={700}
+            className="w-full h-auto object-cover rounded-xl"
+            sizes="(max-width: 768px) 100vw, 33vw"
+            loading="lazy"
           />
         </div>
       </div>
