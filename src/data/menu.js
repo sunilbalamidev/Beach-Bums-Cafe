@@ -1,4 +1,3 @@
-// src/data/menu.js
 export const CATEGORIES = [
   {
     title: "All Day Breakfast",
