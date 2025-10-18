@@ -76,7 +76,7 @@ export default function NepaleseDelights() {
   const HeaderContent = ({ className = "" }) => (
     <div className={`w-full max-w-6xl mx-auto px-4 md:px-8 ${className}`}>
       <div className="py-2">
-        <h2 className="text-3xl md:text-4xl font-semibold font-sans text-[var(--color-brand-teal,#007ba7)]">
+        <h2 className="text-3xl md:text-3xl font-semibold font-sans text-[var(--color-brand-teal,#007ba7)]">
           Nepalese Delights
         </h2>
         <p className="text-sm md:text-base text-[var(--color-brand-ink,#111827)]/70 mt-1">
