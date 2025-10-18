@@ -11,7 +11,7 @@ export const metadata = {
     url: "https://www.beachbums.com.au",
     siteName: "Beach Bums",
     images: [
-      { url: "/og.jpg", width: 1200, height: 630, alt: "Beach Bums café" },
+      { url: "/og.svg", width: 1200, height: 630, alt: "Beach Bums café" },
     ],
     locale: "en_AU",
     type: "website",
@@ -20,10 +20,10 @@ export const metadata = {
     card: "summary_large_image",
     title: "Beach Bums | Coastal café in Dodges Ferry, Tasmania",
     description: "Single O coffee, fresh bites, and seaside vibes.",
-    images: ["/og.jpg"],
+    images: ["/og.svg"],
   },
   icons: {
-    icon: "/favicon-32.png",
+    icon: "/favi.png",
     shortcut: "/favicon.ico",
     apple: "/apple-touch-icon.png",
   },
