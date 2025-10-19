@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
-
+import Image from "next/image";
 const Header = () => {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -61,7 +61,7 @@ const Header = () => {
             aria-label="Beach Bums Tassie - Home"
             className="flex items-center gap-2 transition-transform hover:scale-[1.01]"
           >
-            <img
+            <Image
               src="/logo.svg"
               alt="Beach Bums Café logo"
               className="h-12 w-12 md:h-14 md:w-14 rounded-full object-contain"

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CATEGORIES } from "@/data/menu";
+import Image from "next/image";
 
 /* Fallback image for items without a local img */
 const LOCAL_FALLBACK =
@@ -258,7 +259,7 @@ export default function Menu() {
 
                   {/* Image */}
                   <div className="w-[88px] h-[66px] sm:w-[116px] sm:h-[84px] rounded-xl overflow-hidden bg-[var(--color-brand-sand,#e8e3da)]/50 flex items-center justify-center select-none">
-                    <img
+                    <Image
                       src={resolveLocal(it.img)}
                       alt={it.name}
                       loading="lazy"

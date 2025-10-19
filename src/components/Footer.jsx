@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 
 const Footer = () => {
   return (
@@ -7,7 +8,7 @@ const Footer = () => {
         {/* Brand */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <img
+            <Image
               src="/logo.svg"
               alt="Beach Bums logo"
               className="h-10 w-10 rounded-full object-contain"
