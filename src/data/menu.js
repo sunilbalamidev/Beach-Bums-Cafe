@@ -7,7 +7,7 @@ export const CATEGORIES = [
         name: "Beach Bums Big Breakfast",
         price: "$26",
         note: "Eggs, bacon, sausage, mushrooms, hashbrown & sourdough",
-        img: "/menu/Big_Breakie.svg",
+        img: "/menu/big_breakie.svg",
       },
       {
         name: "Avo Smash",
