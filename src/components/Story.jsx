@@ -18,9 +18,9 @@ const Story = () => {
         {/* right: image */}
         <div>
           <Image
-            src="/coffee.webp"
+            src="/coffeec.webp"
             alt="Our Story"
-            width={1000}
+            width={600}
             height={700}
             className="w-full aspect-[16/9] h-auto object-cover rounded-xl"
             sizes="(max-width: 768px) 100vw, 33vw"

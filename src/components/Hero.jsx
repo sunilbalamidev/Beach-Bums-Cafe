@@ -51,9 +51,9 @@ const Hero = () => {
         {/* right: image block */}
         <div>
           <Image
-            src="/beachbumhero.webp"
+            src="/beachbumheroc.webp"
             alt="Beach Café"
-            width={1280}
+            width={800}
             height={720}
             className="w-full h-auto rounded-2xl shadow-sm"
             priority
