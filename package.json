@@ -6,6 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
+    "export": "next export",
     "lint": "eslint"
   },
   "dependencies": {
@@ -16,7 +17,9 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@next/bundle-analyzer": "^15.5.6",
     "@tailwindcss/postcss": "^4",
+    "critters": "^0.0.23",
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
     "tailwindcss": "^4"

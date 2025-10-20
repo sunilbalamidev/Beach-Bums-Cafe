@@ -11,6 +11,8 @@ const Footer = () => {
             <Image
               src="/logo.svg"
               alt="Beach Bums logo"
+              width={500}
+              height={500}
               className="h-10 w-10 rounded-full object-contain"
             />
             <span className="text-lg font-semibold">Beach Bums Tassie</span>

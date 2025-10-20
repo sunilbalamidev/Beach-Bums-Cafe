@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CATEGORIES } from "@/data/menu";
-import Image from "next/image";
 
 /* Fallback image for items without a local img */
 const LOCAL_FALLBACK =
@@ -28,20 +27,17 @@ const Badge = ({ label }) => {
 };
 
 export default function Menu() {
-  // Section, placeholder for measurement, and tabs
   const menuRef = useRef(null);
   const headerPlaceholderRef = useRef(null);
   const tabsRef = useRef(null);
 
-  // Active category (scroll-spy)
   const [active, setActive] = useState(CATEGORIES[0]?.slug || "");
+  const [headerH, setHeaderH] = useState(56);
+  const [siteOffset, setSiteOffset] = useState(0);
+  const [showFixed, setShowFixed] = useState(false);
+  const [visibleCats, setVisibleCats] = useState([]); // Lazy-render visible categories only
 
-  // Heights/offsets
-  const [headerH, setHeaderH] = useState(56); // measured header bar height
-  const [siteOffset, setSiteOffset] = useState(0); // global site header height (CSS var)
-  const [showFixed, setShowFixed] = useState(false); // overlay visibility within Menu
-
-  // Build section refs
+  // Section refs
   const sections = useMemo(
     () => CATEGORIES.map((c) => ({ slug: c.slug, el: null })),
     []
@@ -51,7 +47,7 @@ export default function Menu() {
     if (i >= 0) sections[i].el = el;
   };
 
-  // Read --site-header-h and observe header height
+  // Measure header heights and --site-header-h
   useEffect(() => {
     const raw =
       getComputedStyle(document.documentElement).getPropertyValue(
@@ -67,17 +63,21 @@ export default function Menu() {
     return () => ro.disconnect();
   }, []);
 
-  const totalOffset = siteOffset + headerH + 12; // used for anchor alignment, clicks, deep links
+  const totalOffset = siteOffset + headerH + 12;
 
-  // ScrollSpy (viewport-based, aware of the site header offset)
+  /* ScrollSpy (throttled) */
   useEffect(() => {
+    let raf;
     const onIntersect = (entries) => {
       const topmost = entries
         .filter((e) => e.isIntersecting)
         .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
       if (topmost) {
-        const id = topmost.target.id;
-        setActive((prev) => (prev === id ? prev : id));
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(() => {
+          const id = topmost.target.id;
+          setActive((prev) => (prev === id ? prev : id));
+        });
       }
     };
 
@@ -86,12 +86,29 @@ export default function Menu() {
       rootMargin: `-${siteOffset + 8}px 0px -65% 0px`,
       threshold: 0.01,
     });
-
     sections.forEach((s) => s.el && observer.observe(s.el));
     return () => observer.disconnect();
   }, [sections, siteOffset]);
 
-  // Deep-link support (#lunch, etc.)
+  /* Lazy-render categories */
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setVisibleCats((prev) =>
+              prev.includes(entry.target.id) ? prev : [...prev, entry.target.id]
+            );
+          }
+        });
+      },
+      { rootMargin: "200px 0px" }
+    );
+    sections.forEach((s) => s.el && obs.observe(s.el));
+    return () => obs.disconnect();
+  }, [sections]);
+
+  /* Deep-link (#lunch etc.) */
   useEffect(() => {
     const hash = window.location.hash.replace("#", "");
     if (!hash) return;
@@ -104,7 +121,6 @@ export default function Menu() {
     }, 0);
   }, [totalOffset]);
 
-  // Click a tab → smooth page scroll
   const onClickTab = (slug) => (e) => {
     e.preventDefault();
     const target = sections.find((s) => s.slug === slug)?.el;
@@ -114,7 +130,7 @@ export default function Menu() {
     history.replaceState(null, "", `#${slug}`);
   };
 
-  // Keep the active pill visible (mobile)
+  /* Keep active pill visible */
   useEffect(() => {
     const ul = tabsRef.current;
     if (!ul) return;
@@ -124,21 +140,17 @@ export default function Menu() {
     ul.scrollTo({ left, behavior: "smooth" });
   }, [active]);
 
-  // Robust "fixed overlay while in Menu" — avoids sticky bugs entirely
+  /* Fixed overlay visibility */
   useEffect(() => {
     const onScroll = () => {
       const root = menuRef.current;
       if (!root) return;
-
       const rect = root.getBoundingClientRect();
-      // We want the header fixed whenever Menu is "in play":
-      // (top has reached/passed site header) AND (bottom still below the header area)
       const entered = rect.top <= siteOffset;
-      const hasRoom = rect.bottom > siteOffset + 1; // +1 avoids edge flicker on exact alignment
+      const hasRoom = rect.bottom > siteOffset + 1;
       setShowFixed(entered && hasRoom);
     };
-
-    onScroll(); // run once
+    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
     return () => {
@@ -147,7 +159,7 @@ export default function Menu() {
     };
   }, [siteOffset]);
 
-  // Shared header content
+  /* Header content reused */
   const HeaderContent = ({ className = "" }) => (
     <div className={`w-full max-w-6xl mx-auto px-4 md:px-8 ${className}`}>
       <ul
@@ -189,24 +201,23 @@ export default function Menu() {
       ref={menuRef}
       className="py-12 md:py-20 bg-[var(--color-brand-bg,#f8f5f0)] border-t border-black/10 overflow-x-hidden"
     >
-      {/* Title block */}
+      {/* Title */}
       <div className="w-full max-w-6xl mx-auto px-4 md:px-8">
         <h1 className="text-2xl md:text-3xl font-semibold mb-6 text-[var(--color-brand-teal,#007ba7)]">
           Our Menu
         </h1>
       </div>
 
-      {/* Header placeholder in flow (prevents layout jump). We show its content until the fixed overlay engages. */}
+      {/* Header placeholder */}
       <div
         ref={headerPlaceholderRef}
         className="border-b border-black/10"
         style={{ background: "rgba(248,245,240,0.95)" }}
       >
-        {/* When overlay is visible, hide the in-flow content to avoid double header */}
         <HeaderContent className={showFixed ? "invisible" : ""} />
       </div>
 
-      {/* Fixed overlay header (only while the Menu section is in view) */}
+      {/* Fixed overlay */}
       {showFixed && (
         <div
           className="fixed inset-x-0 z-40 border-b border-black/10 backdrop-blur-sm"
@@ -214,13 +225,12 @@ export default function Menu() {
             top: "calc(var(--site-header-h) + env(safe-area-inset-top, 0px))",
             background: "rgba(248,245,240,0.95)",
           }}
-          aria-label="Menu categories"
         >
           <HeaderContent />
         </div>
       )}
 
-      {/* Content — single page scroll; header overlay releases at section end */}
+      {/* Content */}
       <div className="w-full max-w-6xl mx-auto px-4 md:px-8">
         {CATEGORIES.map((cat) => (
           <section
@@ -234,44 +244,47 @@ export default function Menu() {
               {cat.title}
             </h2>
 
-            <div className="grid grid-cols-1 gap-4 sm:[grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]">
-              {cat.items.map((it) => (
-                <article
-                  key={`${cat.slug}-${it.name}`}
-                  className="min-w-0 border border-black/10 rounded-2xl bg-white p-3 grid grid-cols-[minmax(0,1fr)_88px] sm:grid-cols-[minmax(0,1fr)_116px] items-center gap-3 hover:shadow-sm transition-shadow"
-                >
-                  {/* Text */}
-                  <div className="min-w-0">
-                    <div className="font-medium text-[15px] text-[var(--color-brand-ink,#000)] truncate">
-                      {it.name}
+            {/* Render only when visible */}
+            {visibleCats.includes(cat.slug) && (
+              <div className="grid grid-cols-1 gap-4 sm:[grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]">
+                {cat.items.map((it) => (
+                  <article
+                    key={`${cat.slug}-${it.name}`}
+                    className="min-w-0 border border-black/10 rounded-2xl bg-white p-3 grid grid-cols-[minmax(0,1fr)_88px] sm:grid-cols-[minmax(0,1fr)_116px] items-center gap-3 hover:shadow-sm transition-shadow"
+                  >
+                    {/* Text */}
+                    <div className="min-w-0">
+                      <div className="font-medium text-[15px] text-[var(--color-brand-ink,#000)] truncate">
+                        {it.name}
+                      </div>
+                      <div className="mt-1 flex items-center gap-2 flex-wrap">
+                        <div className="text-xs text-black/80">{it.price}</div>
+                        {Array.isArray(it.badges) &&
+                          it.badges.map((b) => <Badge key={b} label={b} />)}
+                      </div>
+                      {it.note && (
+                        <p className="mt-1.5 text-[13px] leading-snug text-black/80 line-clamp-2">
+                          {it.note}
+                        </p>
+                      )}
                     </div>
-                    <div className="mt-1 flex items-center gap-2 flex-wrap">
-                      <div className="text-xs text-black/60">{it.price}</div>
-                      {Array.isArray(it.badges) &&
-                        it.badges.map((b) => <Badge key={b} label={b} />)}
-                    </div>
-                    {it.note && (
-                      <p className="mt-1.5 text-[13px] leading-snug text-black/70 line-clamp-2">
-                        {it.note}
-                      </p>
-                    )}
-                  </div>
 
-                  {/* Image */}
-                  <div className="w-[88px] h-[66px] sm:w-[116px] sm:h-[84px] rounded-xl overflow-hidden bg-[var(--color-brand-sand,#e8e3da)]/50 flex items-center justify-center select-none">
-                    <Image
-                      src={resolveLocal(it.img)}
-                      alt={it.name}
-                      loading="lazy"
-                      width={116}
-                      height={84}
-                      className="block w-full h-full object-contain pointer-events-none"
-                      draggable={false}
-                    />
-                  </div>
-                </article>
-              ))}
-            </div>
+                    {/* Image */}
+                    <div className="w-[88px] h-[66px] sm:w-[116px] sm:h-[84px] rounded-xl overflow-hidden bg-[var(--color-brand-sand,#e8e3da)]/50 flex items-center justify-center select-none">
+                      <img
+                        src={resolveLocal(it.img)}
+                        alt={it.name}
+                        loading="lazy"
+                        width="116"
+                        height="84"
+                        className="block w-full h-full object-contain pointer-events-none"
+                        draggable="false"
+                      />
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
           </section>
         ))}
       </div>

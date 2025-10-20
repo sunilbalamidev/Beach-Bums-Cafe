@@ -64,6 +64,8 @@ const Header = () => {
             <Image
               src="/logo.svg"
               alt="Beach Bums Café logo"
+              width={500}
+              height={500}
               className="h-12 w-12 md:h-14 md:w-14 rounded-full object-contain"
             />
             <span className="text-lg md:text-xl font-semibold leading-none">
