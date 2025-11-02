@@ -15,9 +15,9 @@ export default function Home() {
       <TopAnnouncement />
       <Hero />
       <Story />
+      <VisitUs />
       <Menu />
       <NepaleseDelights />
-      <VisitUs />
       <Footer />
     </main>
   );
