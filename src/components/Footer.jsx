@@ -36,8 +36,11 @@ const Footer = () => {
             </a>
           </p>
           <p className="text-sm">
-            <a href="mailto:hello@beachbums.com.au" className="hover:underline">
-              hello@beachbums.com.au
+            <a
+              href="mailto:saltybeachbums@gmail.com"
+              className="hover:underline"
+            >
+              hello@beachbumstassie.com.au
             </a>
           </p>
         </div>

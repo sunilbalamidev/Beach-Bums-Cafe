@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CATEGORIES } from "@/data/menu";
-
+import ExtrasList from "./ExtraList";
 /* Fallback image for items without a local img */
 const LOCAL_FALLBACK =
   'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="360" height="270"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="Inter,ui-sans-serif" font-size="14" fill="%2399a">image coming soon</text></svg>';
@@ -26,6 +26,124 @@ const Badge = ({ label }) => {
   );
 };
 
+/* ---------- Modal (overlay) ---------- */
+function MenuModal({ item, onClose }) {
+  const dialogRef = useRef(null);
+
+  // Close on ESC
+  useEffect(() => {
+    const onKey = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  // Focus & lock scroll
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    setTimeout(
+      () => dialogRef.current?.querySelector("[data-close]")?.focus(),
+      0
+    );
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
+  if (!item) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex justify-center sm:items-center items-start"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${item.name} details`}
+      /* keep the modal centered but not under the sticky header */
+      style={{
+        paddingTop:
+          "calc(var(--site-header-h,0px) + env(safe-area-inset-top,0px) + 12px)",
+        paddingBottom: "24px",
+      }}
+      onClick={(e) => {
+        // backdrop click closes (ignore clicks inside the panel)
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px]" />
+
+      {/* Panel */}
+      <div
+        ref={dialogRef}
+        className="
+          relative z-10 rounded-2xl bg-white shadow-2xl border border-black/10 overflow-hidden
+          w-[min(96vw,880px)]   /* wider than before */
+          max-h-[min(88vh,1000px)] overflow-y-auto
+        "
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-black/10 bg-[var(--color-brand-bg,#f8f5f0)] sticky top-0">
+          <h3 className="text-lg sm:text-xl font-semibold text-[var(--color-brand-teal,#007ba7)] truncate">
+            {item.name}
+          </h3>
+          <button
+            data-close
+            onClick={onClose}
+            className="inline-flex items-center justify-center rounded-full border border-black/10 px-2.5 py-1 text-sm font-medium hover:bg-black/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-brand-teal,#007ba7)]"
+          >
+            Close
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-5 grid gap-5 sm:grid-cols-[1fr_280px]">
+          {" "}
+          {/* bigger image column */}
+          {/* Text */}
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              {item.price && (
+                <span className="inline-flex items-center rounded-full border border-black/10 bg-[var(--color-brand-sand,#e8e3da)]/60 px-2.5 py-0.5 text-sm font-medium text-black/80">
+                  {item.price}
+                </span>
+              )}
+              {Array.isArray(item.badges) &&
+                item.badges.map((b) => <Badge key={b} label={b} />)}
+            </div>
+
+            {item.note && (
+              <p className="mt-3 text-[15px] leading-relaxed text-black/80">
+                {item.note}
+              </p>
+            )}
+          </div>
+          {/* Image */}
+          <div className="rounded-xl overflow-hidden bg-[var(--color-brand-sand,#e8e3da)]/50 flex items-center justify-center">
+            <img
+              src={resolveLocal(item.img)}
+              alt={item.name}
+              loading="eager"
+              width="800"
+              height="600"
+              className="block w-full h-full object-contain"
+            />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-5 py-4 border-t border-black/10 flex items-center justify-end gap-2 sticky bottom-0 bg-white/90 backdrop-blur">
+          <button
+            onClick={onClose}
+            className="inline-flex items-center justify-center rounded-full border border-black/10 px-3 py-1.5 text-sm font-medium hover:bg-black/5"
+          >
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Menu() {
   const menuRef = useRef(null);
   const headerPlaceholderRef = useRef(null);
@@ -35,7 +153,8 @@ export default function Menu() {
   const [headerH, setHeaderH] = useState(56);
   const [siteOffset, setSiteOffset] = useState(0);
   const [showFixed, setShowFixed] = useState(false);
-  const [visibleCats, setVisibleCats] = useState([]); // Lazy-render visible categories only
+  const [visibleCats, setVisibleCats] = useState([]);
+  const [openItem, setOpenItem] = useState(null); // 👈 modal state
 
   // Section refs
   const sections = useMemo(
@@ -108,7 +227,7 @@ export default function Menu() {
     return () => obs.disconnect();
   }, [sections]);
 
-  /* Deep-link (#lunch etc.) */
+  /* Deep-link (#breakfast etc.) */
   useEffect(() => {
     const hash = window.location.hash.replace("#", "");
     if (!hash) return;
@@ -243,6 +362,9 @@ export default function Menu() {
             <h2 className="text-xl font-semibold mb-4 text-[var(--color-brand-teal,#007ba7)]">
               {cat.title}
             </h2>
+            {cat.subtitle && (
+              <p className="mt-1 mb-3 text-sm text-black/60">{cat.subtitle}</p>
+            )}
 
             {/* Render only when visible */}
             {visibleCats.includes(cat.slug) && (
@@ -250,7 +372,16 @@ export default function Menu() {
                 {cat.items.map((it) => (
                   <article
                     key={`${cat.slug}-${it.name}`}
-                    className="min-w-0 border border-black/10 rounded-2xl bg-white p-3 grid grid-cols-[minmax(0,1fr)_88px] sm:grid-cols-[minmax(0,1fr)_116px] items-center gap-3 hover:shadow-sm transition-shadow"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setOpenItem(it)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setOpenItem(it);
+                      }
+                    }}
+                    className="min-w-0 border border-black/10 rounded-2xl bg-white p-3 grid grid-cols-[minmax(0,1fr)_88px] sm:grid-cols-[minmax(0,1fr)_116px] items-center gap-3 hover:shadow-md transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-teal,#007ba7)] cursor-pointer"
                   >
                     {/* Text */}
                     <div className="min-w-0">
@@ -283,11 +414,71 @@ export default function Menu() {
                     </div>
                   </article>
                 ))}
+                {cat.slug === "breakfast" &&
+                  Array.isArray(cat.balanced) &&
+                  cat.balanced.length > 0 && (
+                    <ExtrasList
+                      title="Balanced Beach Bites"
+                      subtitle={cat.balancedSubtitle}
+                      items={cat.balanced}
+                      className="mt-6"
+                    />
+                  )}
+                {/* All Day Meal (below Balanced) */}
+                {cat.slug === "breakfast" &&
+                  Array.isArray(cat.allDay) &&
+                  cat.allDay.length > 0 && (
+                    <ExtrasList
+                      title="All Day Meal"
+                      subtitle={cat.allDaySubtitle}
+                      items={cat.allDay}
+                      className="mt-6"
+                    />
+                  )}
+                {/* Extras as a separate component */}
+                {cat.slug === "breakfast" &&
+                  Array.isArray(cat.extras) &&
+                  cat.extras.length > 0 && (
+                    <ExtrasList
+                      title="Add Extras"
+                      items={cat.extras}
+                      className="mt-6"
+                    />
+                  )}
+              </div>
+            )}
+            {/* Sides */}
+            {cat.slug === "share" &&
+              Array.isArray(cat.sides) &&
+              cat.sides.length > 0 && (
+                <ExtrasList title="Sides" items={cat.sides} className="mt-6" />
+              )}
+            {/* Kids Meal */}
+            {cat.slug === "share" &&
+              Array.isArray(cat.kids) &&
+              cat.kids.length > 0 && (
+                <ExtrasList
+                  title="Kids Meal"
+                  items={cat.kids}
+                  className="mt-6"
+                />
+              )}
+            {/* Salads & Soups Note */}
+            {cat.slug === "share" && cat.saladsSoupsNote && (
+              <div className="col-span-full mt-6">
+                <p className="text-sm text-black/60 italic text-center">
+                  {cat.saladsSoupsNote}
+                </p>
               </div>
             )}
           </section>
         ))}
       </div>
+
+      {/* Modal (opened when a card is clicked) */}
+      {openItem && (
+        <MenuModal item={openItem} onClose={() => setOpenItem(null)} />
+      )}
     </section>
   );
 }

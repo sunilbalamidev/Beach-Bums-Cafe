@@ -1,6 +1,13 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+
+const SOCIALS = {
+  instagram: "https://www.instagram.com/beachbumsdodges",
+  facebook:
+    "https://www.facebook.com/profile.php?id=100094771770314&ref=_xav_ig_profile_page_web#",
+};
+
 const Header = () => {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -60,13 +67,14 @@ const Header = () => {
             href="/"
             aria-label="Beach Bums Tassie - Home"
             className="flex items-center gap-2 transition-transform hover:scale-[1.01]"
+            onClick={() => setOpen(false)}
           >
             <Image
               src="/logo.svg"
               alt="Beach Bums Café logo"
               width={500}
               height={500}
-              className="h-12 w-12 md:h-14 md:w-14 rounded-full object-contain"
+              className="h-16 w-16 md:h-14 md:w-14 rounded-full object-contain"
             />
             <span className="text-lg md:text-xl font-semibold leading-none">
               Beach Bums Tassie
@@ -140,7 +148,7 @@ const Header = () => {
           id="mobile-nav"
           aria-label="Mobile Navigation"
           className={`md:hidden bg-white border-t shadow-sm transition-all duration-300 overflow-hidden ${
-            open ? "max-h-40 opacity-100" : "max-h-0 opacity-0"
+            open ? "max-h-[60vh] opacity-100" : "max-h-0 opacity-0"
           }`}
         >
           <ul
@@ -173,6 +181,72 @@ const Header = () => {
               >
                 Our Story
               </a>
+            </li>
+
+            {/* divider */}
+            <li aria-hidden className="mt-1 mb-1 border-t border-black/10" />
+
+            {/* Social links row */}
+            <li>
+              <div className="flex items-center gap-4">
+                {/* Instagram */}
+                <a
+                  href={SOCIALS.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Visit our Instagram"
+                  className="inline-flex items-center gap-2 rounded-md px-2 py-1 hover:text-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal/40"
+                  onClick={() => setOpen(false)}
+                >
+                  {/* Instagram icon */}
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <rect
+                      x="3"
+                      y="3"
+                      width="18"
+                      height="18"
+                      rx="5"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                    />
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="3.5"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                    />
+                    <circle cx="17.5" cy="6.5" r="1" fill="currentColor" />
+                  </svg>
+                </a>
+
+                {/* Facebook */}
+                <a
+                  href={SOCIALS.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Visit our Facebook"
+                  className="inline-flex items-center gap-2 rounded-md px-2 py-1 hover:text-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal/40"
+                  onClick={() => setOpen(false)}
+                >
+                  {/* Facebook icon */}
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path d="M13.5 9H15V6.5h-1.5c-2.07 0-3.5 1.43-3.5 3.5V12H8v2.5h2.5V21h3V14.5H16L16.5 12H13.5v-1c0-.64.36-1 1-1Z" />
+                  </svg>
+                </a>
+              </div>
             </li>
           </ul>
         </nav>

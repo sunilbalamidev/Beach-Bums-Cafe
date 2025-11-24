@@ -2,28 +2,38 @@
 import React, { useMemo } from "react";
 
 /* ---------- Basic Info ---------- */
-const ADDRESS = "136 Carlton Beach Road, Dodges Ferry,Tasmania";
+const ADDRESS = "136 Carlton Beach Road, Dodges Ferry, Tasmania";
 const PHONE = "+61 405108082";
-const EMAIL = "hello@beachbums.com.au";
+const EMAIL = "saltybeachbums@gmail.com";
 const MAPS_Q = encodeURIComponent(ADDRESS);
 
-/* ---------- Opening Hours ---------- */
+/* ---------- Opening Hours  ---------- */
 const HOURS = {
-  mon: { open: "08:00", close: "15:00" },
-  tue: { open: "08:00", close: "15:00" },
-  wed: { open: "08:00", close: "15:00" },
-  thu: { open: "08:00", close: "15:00" },
-  fri: { open: "08:00", close: "15:30" },
-  sat: { open: "08:00", close: "15:30" },
-  sun: { open: "08:00", close: "15:00" },
+  mon: { open: "09:00", close: "16:00" },
+  tue: { open: "09:00", close: "16:00" },
+  wed: { open: "09:00", close: "16:00" },
+  thu: { open: "09:00", close: "19:00", note: "Nepalese Night after 4pm" },
+  fri: { open: "09:00", close: "19:00" },
+  sat: { open: "08:00", close: "19:00" },
+  sun: { open: "08:00", close: "19:00" },
 };
+
+const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+/* Format 24h -> "9am", "7pm" */
+function fmt(hhmm) {
+  const [h, m] = hhmm.split(":").map(Number);
+  const h12 = ((h + 11) % 12) + 1;
+  const ampm = h < 12 ? "am" : "pm";
+  return `${h12}${m ? `:${String(m).padStart(2, "0")}` : ""}${ampm}`;
+}
 
 /* ---------- Hook: open/closed today ---------- */
 function useTodayStatus() {
   const now = new Date();
-  const dayKey = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"][
-    now.getDay()
-  ];
+  const keyOrder = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+  const dayKey = keyOrder[now.getDay()]; // "sun" | "mon" | ...
+
   const entry = HOURS[dayKey];
 
   const status = useMemo(() => {
@@ -38,8 +48,9 @@ function useTodayStatus() {
 
     const isOpen = nowMins >= openMins && nowMins < closeMins;
     const label = isOpen
-      ? `Open now · until ${entry.close}`
-      : `Closed · opens ${entry.open}`;
+      ? `Open now · until ${fmt(entry.close)}`
+      : `Closed · opens ${fmt(entry.open)}`;
+
     return { isOpen, label, todayKey: dayKey };
   }, [dayKey, entry, now]);
 
@@ -119,28 +130,48 @@ export default function VisitUs() {
             <h3 className="font-medium mb-3 text-[var(--color-brand-ink,#000)]">
               Opening Hours
             </h3>
-            <ul className="divide-y divide-black/5 text-sm">
-              {["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map((k, i) => (
-                <li key={k} className="flex items-center justify-between py-2">
-                  <span
-                    className={`w-28 ${
-                      k === todayKey
-                        ? "font-medium text-[var(--color-brand-teal,#007ba7)]"
-                        : ""
-                    }`}
-                  >
-                    {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][i]}
-                  </span>
 
-                  {HOURS[k] ? (
-                    <span className="tabular-nums">
-                      {HOURS[k].open} — {HOURS[k].close}
-                    </span>
-                  ) : (
-                    <span className="text-black/50">Closed</span>
-                  )}
-                </li>
-              ))}
+            {/* Small helper line to mirror signage */}
+            <div className="mb-2 text-xs text-black/60">
+              Monday – Wednesday: 9am – 4pm
+            </div>
+
+            <ul className="divide-y divide-black/5 text-sm">
+              {["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map((k, i) => {
+                const isToday = k === todayKey;
+                const entry = HOURS[k];
+
+                return (
+                  <li key={k} className="py-2">
+                    <div className="flex items-center justify-between">
+                      <span
+                        className={`w-28 ${
+                          isToday
+                            ? "font-medium text-[var(--color-brand-teal,#007ba7)]"
+                            : ""
+                        }`}
+                      >
+                        {DAY_LABELS[i]}
+                      </span>
+
+                      {entry ? (
+                        <span className="tabular-nums">
+                          {fmt(entry.open)} — {fmt(entry.close)}
+                        </span>
+                      ) : (
+                        <span className="text-black/50">Closed</span>
+                      )}
+                    </div>
+
+                    {/* Thursday note directly under Thursday */}
+                    {k === "thu" && entry?.note && (
+                      <div className="pl-28 mt-1 text-xs text-black/60 italic">
+                        {entry.note}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </div>
